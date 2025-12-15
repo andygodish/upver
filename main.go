@@ -5,8 +5,7 @@ import (
 	"os"
 
 	"github.com/andygodish/upver/internal/config"
-	"github.com/andygodish/upver/internal/extract"
-	"github.com/andygodish/upver/internal/version"
+	"github.com/andygodish/upver/internal/plan"
 )
 
 var planOnly bool
@@ -24,52 +23,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	b, err := os.ReadFile(cfg.Version.File)
+	p, err := plan.Build(cfg)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "ERROR: read version file:", err)
+		fmt.Fprintln(os.Stderr, "ERROR:", err)
 		os.Exit(1)
 	}
 
-	currentVersion, err := extract.ByRegex(b, cfg.Version.Pattern, cfg.Version.Group)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "ERROR: extract version:", err)
-		os.Exit(1)
-	}
-
-	upBytes, err := os.ReadFile(cfg.Upstream.File)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "ERROR: read upstream file:", err)
-		os.Exit(1)
-	}
-
-	upstreamTag, err := extract.ByRegex(upBytes, cfg.Upstream.Pattern, cfg.Upstream.Group)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "ERROR: extract upstream tag:", err)
-		os.Exit(1)
-	}
-
-	pv, err := version.Parse(currentVersion)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "ERROR: parse current version:", err)
-		os.Exit(1)
-	}
-
-	bumpMode := "seq"
-	newBase := pv.Base
-	newSeqNum := pv.SeqNum + 1
-
-	if upstreamTag != pv.Base {
-		bumpMode = "semver"
-		newBase = upstreamTag
-		newSeqNum = 0
-	}
-
-	newVersion := fmt.Sprintf("%s-%s.%d", newBase, pv.SeqName, newSeqNum)
-
-	fmt.Println("Current version:", currentVersion)
-	fmt.Println("Upstream tag:", upstreamTag)
-	fmt.Println("BUMP_MODE:", bumpMode)
-	fmt.Println("NEW_VERSION:", newVersion)
+	fmt.Println("Current version:", p.CurrentVersion)
+	fmt.Println("Upstream tag:", p.UpstreamTag)
+	fmt.Println("BUMP_MODE:", p.BumpMode)
+	fmt.Println("NEW_VERSION:", p.NewVersion)
 
 	if planOnly {
 		return
