@@ -7,11 +7,13 @@ import (
 
 	"github.com/andygodish/upver/internal/config"
 	"github.com/andygodish/upver/internal/plan"
+	"github.com/andygodish/upver/internal/apply"
 )
 
 func main() {
-	planOnly := flag.Bool("plan", false, "print computed plan and exit (default behavior for now)")
+	applyFlag := flag.Bool("apply", false, "apply changes (write updated version to file)")
 	configPath := flag.String("config", "upver.yaml", "path to upver config file")
+	planOnly := flag.Bool("plan", false, "print computed plan and exit (default behavior for now)")
 	flag.Parse()
 
 	cfg, err := config.Load(*configPath)
@@ -33,5 +35,12 @@ func main() {
 
 	if *planOnly {
 		return
+	}
+
+	if *applyFlag {
+		if err := apply.Version(cfg.Version, p.NewVersion); err != nil {
+			fmt.Fprintln(os.Stderr, "ERROR:", err)
+			os.Exit(1)
+		}
 	}
 }
