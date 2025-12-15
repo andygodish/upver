@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -57,7 +59,7 @@ func loadConfig(path string) (*Config, error) {
 	if cfg.Upstream.Group == 0 {
 		cfg.Upstream.Group = 1
 	}
-    
+
 	// Changelog
 	if cfg.Changelog.File == "" {
 		return nil, fmt.Errorf("config: changelog.file is required")
@@ -82,6 +84,37 @@ func extractByRegex(b []byte, pattern string, group int) (string, error) {
 	}
 
 	return string(m[group]), nil
+}
+
+type ParsedVersion struct {
+	Base    string
+	SeqName string
+	SeqNum  int
+}
+
+func parseVersion(v string) (ParsedVersion, error) {
+	// expected: <base>-<seqName>.<seqNum>   e.g. 1.0-jam.2
+	parts := strings.SplitN(v, "-", 2)
+	if len(parts) != 2 {
+		return ParsedVersion{}, fmt.Errorf("invalid version %q: missing '-'", v)
+	}
+	base := parts[0]
+	rest := parts[1]
+
+	dot := strings.LastIndex(rest, ".")
+	if dot == -1 {
+		return ParsedVersion{}, fmt.Errorf("invalid version %q: missing '.'", v)
+	}
+
+	seqName := rest[:dot]
+	seqNumStr := rest[dot+1:]
+
+	n, err := strconv.Atoi(seqNumStr)
+	if err != nil {
+		return ParsedVersion{}, fmt.Errorf("invalid version %q: seq num not int: %w", v, err)
+	}
+
+	return ParsedVersion{Base: base, SeqName: seqName, SeqNum: n}, nil
 }
 
 func main() {
@@ -115,6 +148,26 @@ func main() {
 		os.Exit(1)
 	}
 
+    pv, err := parseVersion(currentVersion)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "ERROR: parse current version:", err)
+		os.Exit(1)
+	}
+
+	bumpMode := "seq"
+	newBase := pv.Base
+	newSeqNum := pv.SeqNum + 1
+
+	if upstreamTag != pv.Base {
+		bumpMode = "semver"
+		newBase = upstreamTag
+		newSeqNum = 0
+	}
+
+	newVersion := fmt.Sprintf("%s-%s.%d", newBase, pv.SeqName, newSeqNum)
+
 	fmt.Println("Current version:", currentVersion)
 	fmt.Println("Upstream tag:", upstreamTag)
+	fmt.Println("BUMP_MODE:", bumpMode)
+	fmt.Println("NEW_VERSION:", newVersion)
 }
