@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 
 	"gopkg.in/yaml.v3"
 )
@@ -14,8 +15,9 @@ type Config struct {
 }
 
 type VersionConfig struct {
-	File     string `yaml:"file"`
-	YamlPath string `yaml:"yamlPath"`
+	File    string `yaml:"file"`
+	Pattern string `yaml:"pattern"`
+	Group   int    `yaml:"group"`
 }
 
 type UpstreamConfig struct {
@@ -40,8 +42,11 @@ func loadConfig(path string) (*Config, error) {
 	}
 
 	// minimal validation (fail fast)
-	if cfg.Version.File == "" || cfg.Version.YamlPath == "" {
-		return nil, fmt.Errorf("config: version.file and version.yamlPath are required")
+	if cfg.Version.File == "" || cfg.Version.Pattern == "" {
+		return nil, fmt.Errorf("config: version.file and version.pattern are required")
+	}
+	if cfg.Version.Group == 0 {
+		cfg.Version.Group = 1
 	}
 	if cfg.Upstream.Type == "" || cfg.Upstream.File == "" {
 		return nil, fmt.Errorf("config: upstream.type and upstream.file are required")
@@ -53,6 +58,24 @@ func loadConfig(path string) (*Config, error) {
 	return &cfg, nil
 }
 
+func extractByRegex(b []byte, pattern string, group int) (string, error) {
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return "", fmt.Errorf("compile regex: %w", err)
+	}
+
+	m := re.FindSubmatch(b)
+	if m == nil {
+		return "", fmt.Errorf("pattern did not match")
+	}
+
+	if group < 0 || group >= len(m) {
+		return "", fmt.Errorf("group %d out of range (matches=%d)", group, len(m)-1)
+	}
+
+	return string(m[group]), nil
+}
+
 func main() {
 	cfg, err := loadConfig("upver.yaml")
 	if err != nil {
@@ -60,5 +83,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Loaded config:\n%+v\n", *cfg)
+	b, err := os.ReadFile(cfg.Version.File)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "ERROR: read version file:", err)
+		os.Exit(1)
+	}
+
+	currentVersion, err := extractByRegex(b, cfg.Version.Pattern, cfg.Version.Group)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "ERROR: extract version:", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Current version:", currentVersion)
 }

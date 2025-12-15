@@ -1,6 +1,7 @@
 version:
   file: zarf.yaml
-  yamlPath: metadata.version
+  pattern: 'metadata:\s*\n(?:[ \t].*\n)*?[ \t]*version:\s*"?([^"\n]+)"?'
+  group: 1
 
 upstream:
   type: image-tag
