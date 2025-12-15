@@ -1,0 +1,11 @@
+version:
+  file: zarf.yaml
+  yamlPath: metadata.version
+
+upstream:
+  type: image-tag
+  file: zarf.yaml
+  imagePrefix: "registry.jam-demo.net/jam/ansys_license_manager/ansys_license_manager:"
+
+changelog:
+  file: CHANGELOG.md
