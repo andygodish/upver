@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -8,16 +9,12 @@ import (
 	"github.com/andygodish/upver/internal/plan"
 )
 
-var planOnly bool
-
 func main() {
-	for _, arg := range os.Args[1:] {
-		if arg == "--plan" {
-			planOnly = true
-		}
-	}
+	planOnly := flag.Bool("plan", false, "print computed plan and exit (default behavior for now)")
+	configPath := flag.String("config", "upver.yaml", "path to upver config file")
+	flag.Parse()
 
-	cfg, err := config.Load("upver.yaml")
+	cfg, err := config.Load(*configPath)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "ERROR:", err)
 		os.Exit(1)
@@ -34,7 +31,7 @@ func main() {
 	fmt.Println("BUMP_MODE:", p.BumpMode)
 	fmt.Println("NEW_VERSION:", p.NewVersion)
 
-	if planOnly {
+	if *planOnly {
 		return
 	}
 }
