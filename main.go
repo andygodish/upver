@@ -21,9 +21,9 @@ type VersionConfig struct {
 }
 
 type UpstreamConfig struct {
-	Type        string `yaml:"type"`
-	File        string `yaml:"file"`
-	ImagePrefix string `yaml:"imagePrefix"`
+	File    string `yaml:"file"`
+	Pattern string `yaml:"pattern"`
+	Group   int    `yaml:"group"`
 }
 
 type ChangelogConfig struct {
@@ -42,15 +42,23 @@ func loadConfig(path string) (*Config, error) {
 	}
 
 	// minimal validation (fail fast)
+	// Version
 	if cfg.Version.File == "" || cfg.Version.Pattern == "" {
 		return nil, fmt.Errorf("config: version.file and version.pattern are required")
 	}
 	if cfg.Version.Group == 0 {
 		cfg.Version.Group = 1
 	}
-	if cfg.Upstream.Type == "" || cfg.Upstream.File == "" {
-		return nil, fmt.Errorf("config: upstream.type and upstream.file are required")
+
+	// Upstream
+	if cfg.Upstream.File == "" || cfg.Upstream.Pattern == "" {
+		return nil, fmt.Errorf("config: upstream.file and upstream.pattern are required")
 	}
+	if cfg.Upstream.Group == 0 {
+		cfg.Upstream.Group = 1
+	}
+    
+	// Changelog
 	if cfg.Changelog.File == "" {
 		return nil, fmt.Errorf("config: changelog.file is required")
 	}
@@ -95,5 +103,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	upBytes, err := os.ReadFile(cfg.Upstream.File)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "ERROR: read upstream file:", err)
+		os.Exit(1)
+	}
+
+	upstreamTag, err := extractByRegex(upBytes, cfg.Upstream.Pattern, cfg.Upstream.Group)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "ERROR: extract upstream tag:", err)
+		os.Exit(1)
+	}
+
 	fmt.Println("Current version:", currentVersion)
+	fmt.Println("Upstream tag:", upstreamTag)
 }
