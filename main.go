@@ -3,45 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/andygodish/upver/internal/config"
 	"github.com/andygodish/upver/internal/extract"
+	"github.com/andygodish/upver/internal/version"
 )
 
 var planOnly bool
-
-type ParsedVersion struct {
-	Base    string
-	SeqName string
-	SeqNum  int
-}
-
-func parseVersion(v string) (ParsedVersion, error) {
-	// expected: <base>-<seqName>.<seqNum>   e.g. 1.0-jam.2
-	parts := strings.SplitN(v, "-", 2)
-	if len(parts) != 2 {
-		return ParsedVersion{}, fmt.Errorf("invalid version %q: missing '-'", v)
-	}
-	base := parts[0]
-	rest := parts[1]
-
-	dot := strings.LastIndex(rest, ".")
-	if dot == -1 {
-		return ParsedVersion{}, fmt.Errorf("invalid version %q: missing '.'", v)
-	}
-
-	seqName := rest[:dot]
-	seqNumStr := rest[dot+1:]
-
-	n, err := strconv.Atoi(seqNumStr)
-	if err != nil {
-		return ParsedVersion{}, fmt.Errorf("invalid version %q: seq num not int: %w", v, err)
-	}
-
-	return ParsedVersion{Base: base, SeqName: seqName, SeqNum: n}, nil
-}
 
 func main() {
 	for _, arg := range os.Args[1:] {
@@ -80,7 +48,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	pv, err := parseVersion(currentVersion)
+	pv, err := version.Parse(currentVersion)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "ERROR: parse current version:", err)
 		os.Exit(1)
