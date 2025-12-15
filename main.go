@@ -3,32 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/andygodish/upver/internal/config"
+	"github.com/andygodish/upver/internal/extract"
 )
 
 var planOnly bool
-
-func extractByRegex(b []byte, pattern string, group int) (string, error) {
-	re, err := regexp.Compile(pattern)
-	if err != nil {
-		return "", fmt.Errorf("compile regex: %w", err)
-	}
-
-	m := re.FindSubmatch(b)
-	if m == nil {
-		return "", fmt.Errorf("pattern did not match")
-	}
-
-	if group < 0 || group >= len(m) {
-		return "", fmt.Errorf("group %d out of range (matches=%d)", group, len(m)-1)
-	}
-
-	return string(m[group]), nil
-}
 
 type ParsedVersion struct {
 	Base    string
@@ -80,7 +62,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	currentVersion, err := extractByRegex(b, cfg.Version.Pattern, cfg.Version.Group)
+	currentVersion, err := extract.ByRegex(b, cfg.Version.Pattern, cfg.Version.Group)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "ERROR: extract version:", err)
 		os.Exit(1)
@@ -92,7 +74,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	upstreamTag, err := extractByRegex(upBytes, cfg.Upstream.Pattern, cfg.Upstream.Group)
+	upstreamTag, err := extract.ByRegex(upBytes, cfg.Upstream.Pattern, cfg.Upstream.Group)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "ERROR: extract upstream tag:", err)
 		os.Exit(1)
