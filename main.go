@@ -8,6 +8,7 @@ import (
 	"github.com/andygodish/upver/internal/config"
 	"github.com/andygodish/upver/internal/plan"
 	"github.com/andygodish/upver/internal/apply"
+	"github.com/andygodish/upver/internal/gitutil"
 )
 
 func main() {
