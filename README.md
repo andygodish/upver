@@ -4,7 +4,7 @@
 
 ## Example
 
-A root level `zarf.yaml` file contains a `metadata.version` field that aims to mirror the semantic version of an upstream container image referenced in the `images` section of the same configuration file.
+A root-level `zarf.yaml` file contains a `metadata.version` field that mirrors the semantic version of an upstream container image referenced in the `images` section of the same configuration file.
 
 ```yaml
 kind: ZarfPackageConfig
@@ -17,29 +17,35 @@ components:
       - registry.com/upstream-example:1.2 # <-- this tag is the upstream reference
 ```
 
-In the root of your repo, create an `upver.yaml` configuration file that tells `upver` how to target the version of your project -- in this example a Zarf package as defined by the `metadata.version` field in the `zarf.yaml` file.
+In the root of your repo, create an upver.yaml configuration file that tells upver how to locate and update the version of your project. In this example, the project version is defined by the metadata.version field in zarf.yaml.
 
 ```yaml
 # upver.yaml
 version: # The version of your project
   file: zarf.yaml
-  pattern: 'metadata:\s*\n(?:[ \t].*\n)*?[ \t]*version:\s*"?([^"\n]+)"?' # Regex describing 
+  pattern: metadata:\s*\n(?:[ \t].*\n)*?[ \t]*version:\s*"?([^"\n]+)"? # Regex describing your versioning scheme
   group: 1 # Capture group for the version string
 ```
 
-An upstream version reference is also defined by the `upver.yaml` file. The idea is that elsewhere in your project there is a literal reference to an upstream version that you want to mirror in your own project version. In this example, the upstream version is the tag of a container image referenced in the `images` section of the same `zarf.yaml` file.
+An upstream version reference is also defined in upver.yaml. The idea is that somewhere in your project there is a literal reference to an upstream version that you want to mirror in your own versioning scheme. In this example, the upstream version is the tag of a container image referenced in the images section of the same zarf.yaml file.
 
 ```yaml
 upstream:
   file: zarf.yaml
-  pattern: 'registry\.jam-demo\.net/jam/ansys_license_manager/ansys_license_manager:([^\s"]+)'
+  pattern: registry\.com/upstream-example:([^\s"]+)
   group: 1
 ```
 
-This works well for projects following trunk-based development. A developer of this example Zarf package merges a working branch into a protected main branch, triggering a CI job that runs `upver` to compute the next version based on the upstream reference and update the `zarf.yaml` file's version field as defined by the `version.pattern` field. The default behavior is to bump the `.seq-x` portion of the version. However, in the event that the `upstream.pattern` tag changes, the base version is updated to match the upstream tag and the sequence resets to `.0`.
+This works well for projects following trunk-based development.
 
-The goal is to mirror the upstream version of your project while still being able to indicate your own project-specific iterations on top of that upstream version. Another use case could be a Helm chart that references an application version in its `values.yaml` and/or `Chart.yaml` file.
+In this workflow, a developer of this Zarf Package merges a short-lived working branch into a protected main branch, triggering a CI job that runs upver. The tool computes the next project version based on the upstream reference and updates the zarf.yaml version field as defined by version.pattern.
+
+By default, upver increments the sequence portion of the version (e.g. .seq.0 → .seq.1). However, if the upstream reference changes, the base version is updated to match the upstream tag and the sequence is reset to .0.
+
+The goal is to mirror the upstream version of a dependency while still indicating project-specific iterations layered on top of that upstream release. Another example use case could be a Helm chart that references an application version in values.yaml and/or Chart.yaml.
 
 ### Changelog Generation
 
-You can also define a changelog section in the `upver.yaml` file that generates a changelog based on Git history between the previous and new version tags. The project relies on Git being available in the environment where `upver` is run.
+Optionally, upver can generate or update a changelog section based on Git history between the previous and new version tags.
+
+Changelog generation relies on Git being available in the environment where upver is run and uses first-parent, non-merge commits to reflect what advanced the mainline history between releases.
