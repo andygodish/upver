@@ -49,3 +49,11 @@ The goal is to mirror the upstream version of a dependency while still indicatin
 Optionally, upver can generate or update a changelog section based on Git history between the previous and new version tags.
 
 Changelog generation relies on Git being available in the environment where upver is run and uses first-parent, non-merge commits to reflect what advanced the mainline history between releases.
+
+## Convenience Functions
+
+To make working with containerized Ansible easier, source the provided aliases:
+
+```bash
+source ./aliases.sh
+```
