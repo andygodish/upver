@@ -1,5 +1,7 @@
 # --- Go build artifacts ---
 upver
+upver-linux-amd64
+upver-linux-arm64
 *.exe
 *.exe~
 *.dll
