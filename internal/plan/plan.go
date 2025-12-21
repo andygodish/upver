@@ -55,7 +55,12 @@ func Build(cfg *config.Config) (*Plan, error) {
 		newSeqNum = 0
 	}
 
-	newVersion := fmt.Sprintf("%s-%s.%d", newBase, pv.SeqName, newSeqNum)
+	var newVersion string
+	if pv.SeqName != "" {
+		newVersion = fmt.Sprintf("%s-%s.%d", newBase, pv.SeqName, newSeqNum)
+	} else {
+		newVersion = fmt.Sprintf("%s-%d", newBase, newSeqNum)
+	}
 
 	return &Plan{
 		CurrentVersion: currentVersion,

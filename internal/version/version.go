@@ -8,31 +8,37 @@ import (
 
 type Parsed struct {
 	Base    string
-	SeqName string
+	SeqName string // if empty, implies number-only versioning, ex: 0.1.2-3
 	SeqNum  int
 }
 
 func Parse(v string) (Parsed, error) {
-	// expected: <base>-<seqName>.<seqNum>   e.g. 1.0-jam.2
 	parts := strings.SplitN(v, "-", 2)
 	if len(parts) != 2 {
 		return Parsed{}, fmt.Errorf("invalid version %q: missing '-'", v)
 	}
+
 	base := parts[0]
-	rest := parts[1]
+	suffix := parts[1]
 
-	dot := strings.LastIndex(rest, ".")
-	if dot == -1 {
-		return Parsed{}, fmt.Errorf("invalid version %q: missing '.'", v)
+	// Case A: <base>-<seqName>.<seqNum>  (e.g. 1.0-jam.2)
+	if dot := strings.LastIndex(suffix, "."); dot != -1 {
+		seqName := suffix[:dot]
+		seqNumStr := suffix[dot+1:]
+
+		n, err := strconv.Atoi(seqNumStr)
+		if err != nil {
+			return Parsed{}, fmt.Errorf("invalid version %q: seq num not int: %w", v, err)
+		}
+
+		return Parsed{Base: base, SeqName: seqName, SeqNum: n}, nil
 	}
 
-	seqName := rest[:dot]
-	seqNumStr := rest[dot+1:]
-
-	n, err := strconv.Atoi(seqNumStr)
+	// Case B: <base>-<seqNum> (e.g. 2.19.1-0)
+	n, err := strconv.Atoi(suffix)
 	if err != nil {
-		return Parsed{}, fmt.Errorf("invalid version %q: seq num not int: %w", v, err)
+		return Parsed{}, fmt.Errorf("invalid version %q: suffix not int: %w", v, err)
 	}
 
-	return Parsed{Base: base, SeqName: seqName, SeqNum: n}, nil
+	return Parsed{Base: base, SeqName: "", SeqNum: n}, nil
 }
