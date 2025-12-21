@@ -3,7 +3,7 @@ VERSION := latest
 
 # Build the Docker image (single architecture)
 .PHONY: docker-build
-build:
+docker-build:
 	@echo "Building $(IMAGE_NAME):$(VERSION)..."
 	docker build \
 		-t $(IMAGE_NAME):$(VERSION) \
