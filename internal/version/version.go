@@ -13,13 +13,16 @@ type Parsed struct {
 }
 
 func Parse(v string) (Parsed, error) {
-	parts := strings.SplitN(v, "-", 2)
-	if len(parts) != 2 {
+	sep := strings.LastIndex(v, "-")
+	if sep == -1 {
 		return Parsed{}, fmt.Errorf("invalid version %q: missing '-'", v)
 	}
 
-	base := parts[0]
-	suffix := parts[1]
+	base := v[:sep]
+	suffix := v[sep+1:]
+	if base == "" || suffix == "" {
+		return Parsed{}, fmt.Errorf("invalid version %q: empty base or suffix", v)
+	}
 
 	// Case A: <base>-<seqName>.<seqNum>  (e.g. 1.0-jam.2)
 	if dot := strings.LastIndex(suffix, "."); dot != -1 {
