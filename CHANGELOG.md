@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.3](https://github.com/andygodish/upver/compare/v0.0.2...v0.0.3) (2026-07-31)
+
+
+### Bug Fixes
+
+* modified delimeter to account for ex: '0.4.9.11-0+deb13u1-0' ([#10](https://github.com/andygodish/upver/issues/10)) ([ab0f1da](https://github.com/andygodish/upver/commit/ab0f1dabe183e98161c36264d83ac4daa6402a78))
+
+
+### Miscellaneous
+
+* **deps:** update alpine docker tag to v3.24 ([#9](https://github.com/andygodish/upver/issues/9)) ([a09533a](https://github.com/andygodish/upver/commit/a09533a620b27ad1ed14b88b7c6e21ab92c3281e))
+* **deps:** update golang docker tag to v1.26 ([#7](https://github.com/andygodish/upver/issues/7)) ([010c716](https://github.com/andygodish/upver/commit/010c716589103080a41e6fc335323fef5fe85efb))
+* **deps:** update googleapis/release-please-action action to v5 ([#8](https://github.com/andygodish/upver/issues/8)) ([0b0a4bc](https://github.com/andygodish/upver/commit/0b0a4bcb0c4bc30007f55e834ab24eeab6d054c9))
+
 ## [0.0.2](https://github.com/andygodish/upver/compare/v0.0.1...v0.0.2) (2025-12-21)
 
 
