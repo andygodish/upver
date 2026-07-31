@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.4](https://github.com/andygodish/upver/compare/v0.0.3...v0.0.4) (2026-07-31)
+
+
+### Miscellaneous
+
+* **deps:** update actions/setup-go action to v7 ([#13](https://github.com/andygodish/upver/issues/13)) ([d1781f7](https://github.com/andygodish/upver/commit/d1781f78e3bc81018d2d8ba0f53161b1e8195693))
+
 ## [0.0.3](https://github.com/andygodish/upver/compare/v0.0.2...v0.0.3) (2026-07-31)
 
 
